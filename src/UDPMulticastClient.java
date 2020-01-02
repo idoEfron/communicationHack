@@ -1,4 +1,6 @@
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.*;
 import java.util.*;
 import java.io.IOException;
@@ -20,9 +22,9 @@ public class UDPMulticastClient implements Runnable {
         servers = new HashSet<>();
         this.expectedServerCount = expectedServerCount;
         this.address = InetAddress.getByName("255.255.255.255");
-        client = new DatagramSocket(3117, InetAddress.getByName("localhost"));
+        client = new DatagramSocket(3117, InetAddress.getByName("127.0.0.1"));
     }
-    public int discoverServers(Message msg) throws IOException, InterruptedException {
+    public int discoverServers(Message msg) throws IOException, InterruptedException, ClassNotFoundException {
         initializeSocketForBroadcasting();
         copyMessageOnBuffer(msg);
 
@@ -63,7 +65,7 @@ public class UDPMulticastClient implements Runnable {
         socket.send(packet);
     }
 
-    private int receivePackets() throws IOException {
+    private int receivePackets() throws IOException, ClassNotFoundException {
         int serversDiscovered = 0;
         while (serversDiscovered != expectedServerCount) {
             receivePacket();
@@ -72,9 +74,15 @@ public class UDPMulticastClient implements Runnable {
         return serversDiscovered;
     }
 
-    private void receivePacket() throws IOException {
+    private void receivePacket() throws IOException, ClassNotFoundException {
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
         socket.receive(packet);
+        InetAddress address = packet.getAddress();
+        int port = packet.getPort();
+        packet = new DatagramPacket(buf, buf.length, address, port);
+        ByteArrayInputStream in = new ByteArrayInputStream(packet.getData());
+        ObjectInputStream is = new ObjectInputStream(in);
+        Message received = (Message) is.readObject();
         servers.add(packet.getAddress());
     }
 
@@ -96,7 +104,7 @@ public class UDPMulticastClient implements Runnable {
         try {
             char[] ido= {'i','d','o'};
             int numOfServers = discoverServers(new Message(ido,'1',ido,'3',"ddd","ooo"));
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();

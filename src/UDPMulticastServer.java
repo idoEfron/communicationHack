@@ -40,7 +40,10 @@ public class UDPMulticastServer extends Thread {
                         //continue;
                     }
                 }
-                socket.send(packet);
+                received.setType('2');
+                buf = received.getBytes();
+                DatagramPacket serverPacket = new DatagramPacket(buf, buf.length, address, port);
+                socket.send(serverPacket);
             } catch (IOException e) {
                 e.printStackTrace();
                 running = false;
