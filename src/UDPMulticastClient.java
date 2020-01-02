@@ -1,28 +1,26 @@
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
+import java.net.*;
 import java.util.*;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.util.stream.Collectors;
 
 public class UDPMulticastClient implements Runnable {
     private DatagramSocket socket;
+    private DatagramSocket client;
     private InetAddress address;
     private int expectedServerCount;
     private byte[] buf;
     private Set<InetAddress> servers;
 
+
     public UDPMulticastClient(int expectedServerCount) throws Exception {
         servers = new HashSet<>();
         this.expectedServerCount = expectedServerCount;
         this.address = InetAddress.getByName("255.255.255.255");
+        client = new DatagramSocket(3117, InetAddress.getByName("localhost"));
     }
 
     public int discoverServers(String msg) throws IOException, InterruptedException {
@@ -53,7 +51,7 @@ public class UDPMulticastClient implements Runnable {
         return broadcastList;
     }
 
-    private void initializeSocketForBroadcasting() throws SocketException {
+    private void initializeSocketForBroadcasting() throws SocketException, UnknownHostException {
         socket = new DatagramSocket();
         socket.setBroadcast(true);
 
@@ -99,7 +97,7 @@ public class UDPMulticastClient implements Runnable {
     @Override
     public void run() {
         try {
-            discoverServers("end");
+           int numOfServers= discoverServers("end");
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
