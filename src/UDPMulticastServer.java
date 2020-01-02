@@ -28,7 +28,7 @@ public class UDPMulticastServer extends Thread {
                 String received = new String(packet.getData(), 0, packet.getLength());
                 if (received.contains("end")) {
                     running = false;
-                    continue;
+                    //continue;
                 }
                 System.out.println(received);
                 socket.send(packet);
