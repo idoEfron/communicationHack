@@ -1,5 +1,7 @@
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -25,16 +27,23 @@ public class UDPMulticastServer extends Thread {
                 InetAddress address = packet.getAddress();
                 int port = packet.getPort();
                 packet = new DatagramPacket(buf, buf.length, address, port);
-                String received = new String(packet.getData(), 0, packet.getLength());
-                if (received.contains("end")) {
-                    running = false;
-                    continue;
+                ByteArrayInputStream in = new ByteArrayInputStream(packet.getData());
+                ObjectInputStream is = new ObjectInputStream(in);
+                Message received = (Message) is.readObject();
+                //String received = new String(packet.getData(), 0, packet.getLength());
+                if(received!=null) {
+                    System.out.println(received.getType());
+                    if (received.getStart().equals("ddd")) {
+                        running = false;
+                        continue;
+                    }
                 }
-                System.out.println(received);
                 socket.send(packet);
             } catch (IOException e) {
                 e.printStackTrace();
                 running = false;
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
         }
         socket.close();

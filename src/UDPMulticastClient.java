@@ -3,16 +3,13 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.util.Scanner;
+import java.util.*;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public class UDPMulticastClient implements Runnable {
@@ -20,13 +17,13 @@ public class UDPMulticastClient implements Runnable {
     private InetAddress address;
     private int expectedServerCount;
     private byte[] buf;
+    private HashSet<InetAddress> hashServers;
 
     public UDPMulticastClient(int expectedServerCount) throws Exception {
         this.expectedServerCount = expectedServerCount;
         this.address = InetAddress.getByName("255.255.255.255");
     }
-
-    public int discoverServers(String msg) throws IOException {
+    public int discoverServers(Message msg) throws IOException {
         initializeSocketForBroadcasting();
         copyMessageOnBuffer(msg);
 
@@ -56,14 +53,11 @@ public class UDPMulticastClient implements Runnable {
     private void initializeSocketForBroadcasting() throws SocketException {
         socket = new DatagramSocket();
         socket.setBroadcast(true);
-        socket.connect(address,0);
-
+        //socket.connect(address,0);
     }
-
-    private void copyMessageOnBuffer(String msg) {
+    private void copyMessageOnBuffer(Message msg) throws IOException {
         buf = msg.getBytes();
     }
-
     private void broadcastPacket(InetAddress address) throws IOException {
         DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 3117);
         socket.send(packet);
@@ -99,7 +93,8 @@ public class UDPMulticastClient implements Runnable {
     @Override
     public void run() {
         try {
-            discoverServers("end");
+            char[] ido= {'i','d','o'};
+            discoverServers(new Message(ido,'1',ido,'3',"ddd","ooo"));
         } catch (IOException e) {
             e.printStackTrace();
         }
