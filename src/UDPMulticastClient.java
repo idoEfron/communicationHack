@@ -1,35 +1,35 @@
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
+import java.net.*;
 import java.util.*;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.util.stream.Collectors;
 
 public class UDPMulticastClient implements Runnable {
     private DatagramSocket socket;
+    private DatagramSocket client;
     private InetAddress address;
     private int expectedServerCount;
     private byte[] buf;
-    private HashSet<InetAddress> hashServers;
+    private Set<InetAddress> servers;
+
 
     public UDPMulticastClient(int expectedServerCount) throws Exception {
+        servers = new HashSet<>();
         this.expectedServerCount = expectedServerCount;
         this.address = InetAddress.getByName("255.255.255.255");
+        client = new DatagramSocket(3117, InetAddress.getByName("localhost"));
     }
-    public int discoverServers(Message msg) throws IOException {
+    public int discoverServers(Message msg) throws IOException, InterruptedException {
         initializeSocketForBroadcasting();
         copyMessageOnBuffer(msg);
 
         // When we want to broadcast not just to local network, call listAllBroadcastAddresses() and execute broadcastPacket for each value.
         broadcastPacket(address);
 
+        Thread.sleep(700);
         return receivePackets();
     }
 
@@ -50,10 +50,10 @@ public class UDPMulticastClient implements Runnable {
         return broadcastList;
     }
 
-    private void initializeSocketForBroadcasting() throws SocketException {
+    private void initializeSocketForBroadcasting() throws SocketException, UnknownHostException {
         socket = new DatagramSocket();
         socket.setBroadcast(true);
-        //socket.connect(address,0);
+
     }
     private void copyMessageOnBuffer(Message msg) throws IOException {
         buf = msg.getBytes();
@@ -75,6 +75,7 @@ public class UDPMulticastClient implements Runnable {
     private void receivePacket() throws IOException {
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
         socket.receive(packet);
+        servers.add(packet.getAddress());
     }
 
     public void close() {
@@ -94,8 +95,10 @@ public class UDPMulticastClient implements Runnable {
     public void run() {
         try {
             char[] ido= {'i','d','o'};
-            discoverServers(new Message(ido,'1',ido,'3',"ddd","ooo"));
+            int numOfServers = discoverServers(new Message(ido,'1',ido,'3',"ddd","ooo"));
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
         close();

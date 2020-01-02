@@ -9,11 +9,13 @@ import java.net.InetSocketAddress;
 
 public class UDPMulticastServer extends Thread {
 
-    protected DatagramSocket socket = null;
+    protected DatagramSocket socket;
+    protected DatagramSocket server;
     protected boolean running;
     protected byte[] buf = new byte[256];
 
     public UDPMulticastServer() throws IOException {
+        socket = new DatagramSocket(null);
         socket = new DatagramSocket(null);
         socket.setReuseAddress(true);
         socket.bind(new InetSocketAddress(3117));
@@ -35,7 +37,7 @@ public class UDPMulticastServer extends Thread {
                     System.out.println(received.getType());
                     if (received.getStart().equals("ddd")) {
                         running = false;
-                        continue;
+                        //continue;
                     }
                 }
                 socket.send(packet);
