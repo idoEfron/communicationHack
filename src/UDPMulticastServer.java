@@ -10,12 +10,10 @@ import java.net.InetSocketAddress;
 public class UDPMulticastServer extends Thread {
 
     protected DatagramSocket socket;
-    protected DatagramSocket server;
     protected boolean running;
     protected byte[] buf = new byte[256];
 
     public UDPMulticastServer() throws IOException {
-        socket = new DatagramSocket(null);
         socket = new DatagramSocket(null);
         socket.setReuseAddress(true);
         socket.bind(new InetSocketAddress(3117));
@@ -34,12 +32,16 @@ public class UDPMulticastServer extends Thread {
                 Message received = (Message) is.readObject();
                 //String received = new String(packet.getData(), 0, packet.getLength());
                 if(received!=null) {
-                    System.out.println(received.getType());
+                    //System.out.println(received.getType());
                     if (received.getStart().equals("ddd")) {
                         running = false;
                         //continue;
                     }
                 }
+
+                received.setType('2');
+                buf = received.getBytes();
+                packet = new DatagramPacket(buf, buf.length, packet.getAddress(), 3117);
                 socket.send(packet);
             } catch (IOException e) {
                 e.printStackTrace();

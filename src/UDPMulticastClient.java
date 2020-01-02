@@ -20,7 +20,7 @@ public class UDPMulticastClient implements Runnable {
         servers = new HashSet<>();
         this.expectedServerCount = expectedServerCount;
         this.address = InetAddress.getByName("255.255.255.255");
-        client = new DatagramSocket(3117, InetAddress.getByName("localhost"));
+        client = new DatagramSocket(3117, InetAddress.getByName("127.0.0.1"));
     }
     public int discoverServers(Message msg) throws IOException, InterruptedException {
         initializeSocketForBroadcasting();
@@ -29,7 +29,7 @@ public class UDPMulticastClient implements Runnable {
         // When we want to broadcast not just to local network, call listAllBroadcastAddresses() and execute broadcastPacket for each value.
         broadcastPacket(address);
 
-        Thread.sleep(700);
+        Thread.sleep(1000);
         return receivePackets();
     }
 
@@ -75,6 +75,7 @@ public class UDPMulticastClient implements Runnable {
     private void receivePacket() throws IOException {
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
         socket.receive(packet);
+        System.out.println(packet.getData());
         servers.add(packet.getAddress());
     }
 

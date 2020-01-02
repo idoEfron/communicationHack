@@ -2,6 +2,7 @@ import java.io.*;
 
 public class Message implements Serializable {
     private char[] teamName;
+
     private char type;
     private char[] hash;
     private char originalLength;
@@ -66,5 +67,9 @@ public class Message implements Serializable {
         ObjectInputStream is = new ObjectInputStream(in);
         return (Message) is.readObject();
 
+    }
+
+    public void setType(char type) {
+        this.type = type;
     }
 }
