@@ -16,7 +16,6 @@ public class UDPMulticastServer extends Thread {
 
     public UDPMulticastServer() throws IOException {
         socket = new DatagramSocket(null);
-        socket = new DatagramSocket(null);
         socket.setReuseAddress(true);
         socket.bind(new InetSocketAddress(3117));
     }
@@ -29,12 +28,11 @@ public class UDPMulticastServer extends Thread {
                 InetAddress address = packet.getAddress();
                 int port = packet.getPort();
                 packet = new DatagramPacket(buf, buf.length, address, port);
-                ByteArrayInputStream in = new ByteArrayInputStream(packet.getData());
-                ObjectInputStream is = new ObjectInputStream(in);
-                Message received = (Message) is.readObject();
+                Message received = Message.getMessage(packet.getData());
+                System.out.println(received.getType());
                 //String received = new String(packet.getData(), 0, packet.getLength());
                 if(received!=null) {
-                    System.out.println(received.getType());
+                    //System.out.println(received.getType());
                     if (received.getStart().equals("ddd")) {
                         running = false;
                         //continue;
@@ -42,8 +40,8 @@ public class UDPMulticastServer extends Thread {
                 }
                 received.setType('2');
                 buf = received.getBytes();
-                DatagramPacket serverPacket = new DatagramPacket(buf, buf.length, address, port);
-                socket.send(serverPacket);
+                packet = new DatagramPacket(buf, buf.length, address, port);
+                socket.send(packet);
             } catch (IOException e) {
                 e.printStackTrace();
                 running = false;

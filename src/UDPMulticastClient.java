@@ -22,7 +22,7 @@ public class UDPMulticastClient implements Runnable {
         servers = new HashSet<>();
         this.expectedServerCount = expectedServerCount;
         this.address = InetAddress.getByName("255.255.255.255");
-        client = new DatagramSocket(3117, InetAddress.getByName("127.0.0.1"));
+        client = new DatagramSocket(3117, InetAddress.getByName("localhost"));
     }
     public int discoverServers(Message msg) throws IOException, InterruptedException, ClassNotFoundException {
         initializeSocketForBroadcasting();
@@ -80,11 +80,17 @@ public class UDPMulticastClient implements Runnable {
         InetAddress address = packet.getAddress();
         int port = packet.getPort();
         packet = new DatagramPacket(buf, buf.length, address, port);
-        ByteArrayInputStream in = new ByteArrayInputStream(packet.getData());
-        ObjectInputStream is = new ObjectInputStream(in);
-        Message received = (Message) is.readObject();
+        Message message = Message.getMessage(packet.getData());
+        System.out.println(message.getType());
         servers.add(packet.getAddress());
+
+        //todo
+        Message messageClient = new Message(message.getTeamName(),'3',message.getHash(),message.getOriginalLength(),"startTODO","endTODO");
+        copyMessageOnBuffer(messageClient);
+        DatagramPacket packetClient = new DatagramPacket(buf, buf.length, address, 3117);
+        client.send(packetClient);
     }
+
 
     public void close() {
         socket.close();
@@ -103,9 +109,14 @@ public class UDPMulticastClient implements Runnable {
     public void run() {
         try {
             char[] ido= {'i','d','o'};
-            int numOfServers = discoverServers(new Message(ido,'1',ido,'3',"ddd","ooo"));
+            int numOfServers = discoverServers(new Message(ido,'1',ido,'6',"ddd","ooo"));
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        try {
+            Thread.sleep(4000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
