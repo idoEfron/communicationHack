@@ -1,4 +1,6 @@
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.*;
 import java.util.*;
 import java.io.IOException;
@@ -20,16 +22,14 @@ public class UDPMulticastClient implements Runnable {
         servers = new HashSet<>();
         this.expectedServerCount = expectedServerCount;
         this.address = InetAddress.getByName("255.255.255.255");
-        client = new DatagramSocket(3117, InetAddress.getByName("127.0.0.1"));
     }
-    public int discoverServers(Message msg) throws IOException, InterruptedException {
+    public int discoverServers(Message msg) throws IOException, ClassNotFoundException, InterruptedException {
         initializeSocketForBroadcasting();
         copyMessageOnBuffer(msg);
 
         // When we want to broadcast not just to local network, call listAllBroadcastAddresses() and execute broadcastPacket for each value.
         broadcastPacket(address);
 
-        Thread.sleep(1000);
         return receivePackets();
     }
 
@@ -53,6 +53,9 @@ public class UDPMulticastClient implements Runnable {
     private void initializeSocketForBroadcasting() throws SocketException, UnknownHostException {
         socket = new DatagramSocket();
         socket.setBroadcast(true);
+        socket.setSoTimeout(1000);
+        client = new DatagramSocket();
+
 
     }
     private void copyMessageOnBuffer(Message msg) throws IOException {
@@ -63,7 +66,7 @@ public class UDPMulticastClient implements Runnable {
         socket.send(packet);
     }
 
-    private int receivePackets() throws IOException {
+    private int receivePackets() throws IOException, ClassNotFoundException, InterruptedException {
         int serversDiscovered = 0;
         while (serversDiscovered != expectedServerCount) {
             receivePacket();
@@ -72,10 +75,18 @@ public class UDPMulticastClient implements Runnable {
         return serversDiscovered;
     }
 
-    private void receivePacket() throws IOException {
+    private void receivePacket() throws IOException, ClassNotFoundException, InterruptedException {
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
+        Thread.sleep(500);
+
         socket.receive(packet);
-        System.out.println(packet.getData());
+        InetAddress address = packet.getAddress();
+        int port = packet.getPort();
+        packet = new DatagramPacket(buf, buf.length, InetAddress.getByName("localhost"), port);
+        ByteArrayInputStream in = new ByteArrayInputStream(packet.getData());
+        ObjectInputStream is = new ObjectInputStream(in);
+        Message received = (Message) is.readObject();
+        System.out.println(received.getType());
         servers.add(packet.getAddress());
     }
 
@@ -97,7 +108,7 @@ public class UDPMulticastClient implements Runnable {
         try {
             char[] ido= {'i','d','o'};
             int numOfServers = discoverServers(new Message(ido,'1',ido,'3',"ddd","ooo"));
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();

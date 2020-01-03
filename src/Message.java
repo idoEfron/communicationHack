@@ -9,7 +9,7 @@ public class Message implements Serializable {
     private String start;
     private String end;
 
-    public Message(char[] teamName, char type, char[] hash, char originalLength,String start, String end) {
+    public Message(char[] teamName, char type, char[] hash, char originalLength, String start, String end) {
         if(teamName.length==32) {
             this.teamName = teamName;
         }

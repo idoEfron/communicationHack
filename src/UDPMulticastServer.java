@@ -14,9 +14,7 @@ public class UDPMulticastServer extends Thread {
     protected byte[] buf = new byte[256];
 
     public UDPMulticastServer() throws IOException {
-        socket = new DatagramSocket(null);
-        socket.setReuseAddress(true);
-        socket.bind(new InetSocketAddress(3117));
+        socket = new DatagramSocket(3117);
     }
     public void run() {
         running = true;
@@ -37,12 +35,16 @@ public class UDPMulticastServer extends Thread {
                         running = false;
                         //continue;
                     }
+
+                    if(Character.compare(received.getType(),'1')==0){
+                        received.setType('2');
+                        byte[] offer = new byte[256];
+                        offer = received.getBytes();
+                        DatagramPacket serverPacket = new DatagramPacket(offer, offer.length, address, port);
+                        socket.send(serverPacket);
+                    }
                 }
 
-                received.setType('2');
-                buf = received.getBytes();
-                packet = new DatagramPacket(buf, buf.length, packet.getAddress(), 3117);
-                socket.send(packet);
             } catch (IOException e) {
                 e.printStackTrace();
                 running = false;
