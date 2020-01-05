@@ -9,6 +9,30 @@ public class Message implements Serializable {
     private String start;
     private String end;
 
+    public void setType(char type) {
+        this.type = type;
+    }
+
+    public void setTeamName(char[] teamName) {
+        this.teamName = teamName;
+    }
+
+    public void setHash(char[] hash) {
+        this.hash = hash;
+    }
+
+    public void setOriginalLength(char originalLength) {
+        this.originalLength = originalLength;
+    }
+
+    public void setStart(String start) {
+        this.start = start;
+    }
+
+    public void setEnd(String end) {
+        this.end = end;
+    }
+
     public Message(char[] teamName, char type, char[] hash, char originalLength, String start, String end) {
         if(teamName.length==32) {
             this.teamName = teamName;
@@ -62,14 +86,12 @@ public class Message implements Serializable {
         byte [] data = bos.toByteArray();
         return data;
     }
-    public Message getMessage(byte [] data) throws IOException, ClassNotFoundException {
+    static public Message getMessage(byte [] data) throws IOException, ClassNotFoundException {
         ByteArrayInputStream in = new ByteArrayInputStream(data);
         ObjectInputStream is = new ObjectInputStream(in);
-        return (Message) is.readObject();
+        Message message = (Message) is.readObject();
+        is.close();
+        return message;
 
-    }
-
-    public void setType(char type) {
-        this.type = type;
     }
 }
